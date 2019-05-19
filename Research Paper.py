@@ -42,17 +42,17 @@ def difference(dataset, interval):
         value = dataset[i] - dataset[i - interval]
         diff.append(value)
     return Series(diff)
-d_indpro = difference(indpro_temp, 1)
+d_indpro_temp = difference(indpro_temp, 1)
 
 date_temp = date.iloc[:,0].values
 date_temp = np.delete(date_temp,0)
 
-pyplot.plot(date_temp, d_indpro)
+pyplot.plot(date_temp, d_indpro_temp)
 pyplot.show()
-print('Skewness: %f' % skew(d_indpro))
+print('Skewness: %f' % skew(d_indpro_temp))
 
-plot_acf(d_indpro, lags=60)
-plot_pacf(d_indpro, lags=20)
+plot_acf(d_indpro_temp, lags=60)
+plot_pacf(d_indpro_temp, lags=20)
 
 # INDPRO differenced log
 ln_indpro = list()
@@ -62,14 +62,14 @@ for i in range(0, len(indpro_temp)):
     
 ln_indpro = pd.DataFrame(ln_indpro)
 ln_indpro_temp = ln_indpro.iloc[:,0].values
-ln_d_indpro = difference(ln_indpro, 1)
+d_ln_indpro_temp = difference(ln_indpro, 1)
 
 pyplot.plot(df_date2, logdf_ip_diff)
 pyplot.show()
 print('Skewness: %f' % skew(logdf_ip_diff))
 
-plot_acf(ln_d_indpro, lags=60)
-plot_pacf(ln_d_indpro, lags=20)    
+plot_acf(d_ln_indpro_temp, lags=60)
+plot_pacf(d_ln_indpro_temp, lags=20)    
 
 # Adfuller tests
 ## INDPRO w/o first differencing
@@ -81,7 +81,7 @@ for key, value in result[4].items():
     print('\t%s: %.3f' % (key, value))
 
 ## INDPRO first differenced  
-result2 = adfuller(d_indpro)
+result2 = adfuller(d_indpro_temp)
 print('ADF Statistic: %f' % result2[0])
 print('p-value: %f' % result2[1])
 print('Critical Values:')
@@ -89,7 +89,7 @@ for key, value in result2[4].items():
     print('\t%s: %.3f' % (key, value))
     
 ## INDPRO first differenced log    
-result3 = adfuller(ln_d_indpro)
+result3 = adfuller(d_ln_indpro_temp)
 print('ADF Statistic: %f' % result3[0])
 print('p-value: %f' % result3[1])
 print('Critical Values:')
@@ -106,7 +106,7 @@ print(model_fit.summary())
 ## fit model ARIMA(4,0,0), differencing done by me
 ## beforehand. So this is essentially an ARMA(4, 0) 
 ## model on the already differenced data
-d_indpro = pd.DataFrame(d_indpro)
+d_indpro = pd.DataFrame(d_indpro_temp)
 model2 = ARIMA(d_indpro, order=(3, 0, 0))
 model_fit2 = model2.fit(disp=0)
 print(model_fit2.summary())
@@ -124,8 +124,8 @@ pyplot.show()
 print(residuals.describe())
 
 ## fit model ARIMA(1,0,0) on differenced log
-ln_d_indpro = pd.DataFrame(ln_d_indpro)
-model3 = ARIMA(ln_d_indpro, order=(1, 0, 0))
+d_ln_indpro = pd.DataFrame(d_ln_indpro_temp)
+model3 = ARIMA(d_ln_indpro, order=(1, 0, 0))
 model_fit3 = model3.fit(disp=0)
 print(model_fit3.summary())
 
@@ -192,7 +192,7 @@ pyplot.plot(predictions, color='red')
 pyplot.show()
 
 ## forecasting of last 34% logged differences
-X = ln_d_indpro.values
+X = d_ln_indpro.values
 size = int(len(X) *0.66)
 train, test = X[0:size], X[size:len(X)]
 history = [x for x in train]
