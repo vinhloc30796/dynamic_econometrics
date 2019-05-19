@@ -1,160 +1,298 @@
-#----------------------#
-# Dynamic Econometrics #
-#    Research Paper    #
-#----------------------#
+# -*- coding: utf-8 -*-
+"""
+Created on Sat May 11 19:29:56 2019
+
+@author: Rutger
+"""
+
+import math
+import pandas as pd
+from pandas import Series
+from matplotlib import pyplot
+import numpy as np
+from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.graphics.tsaplots import plot_pacf
+from sklearn.metrics import mean_squared_error
+from scipy.stats import skew
+import os
+
+# Make sure that the Excel file is in your working
+# directory. Also, make sure that you delete all
+# data prior to 2007 in the Excel file.
+cwd = os.getcwd()
+# Loc: Saving this line to run code locally for me
+# os.chdir('C:\\Users\\vinhl\\OneDrive\\[Work] Translate and Class\\[RUG] Dynamic Econometrics\\dynamic_econometrics')
+print(cwd)
+
+# INDPRO
+data = pd.read_excel('FREDMD_march2019.xlsx')
+indpro = pd.DataFrame(data, columns= ['INDPRO'])[0:577] # Select only data upto 2007
+date = pd.DataFrame(data, columns= ['sasdate'])[0:577] # Select only data upto 2007
+
+pyplot.plot(date, indpro)
+
+plot_acf(indpro, lags=60)
+plot_pacf(indpro, lags=10)
+
+# INDPRO differenced
+indpro_temp = indpro.iloc[:,0].values
+d_test_indpro = indpro_temp[1:-1] - indpro_temp[0:-2]
+
+def difference(dataset, interval):
+    diff = list()
+    for i in range(interval, len(dataset)):
+        value = dataset[i] - dataset[i - interval]
+        diff.append(value)
+    return Series(diff)
+d_indpro_temp = difference(indpro_temp, 1)
+
+date_temp = date.iloc[:,0].values
+date_temp = np.delete(date_temp,0)
+
+pyplot.plot(date_temp, d_indpro_temp)
+pyplot.show()
+print('Skewness: %f' % skew(d_indpro_temp))
+
+plot_acf(d_indpro_temp, lags=60)
+plot_pacf(d_indpro_temp, lags=20)
+
+# INDPRO differenced log
+ln_indpro = list()
+for i in range(0, len(indpro_temp)):
+    value = math.log(indpro_temp[i])
+    ln_indpro.append(value)
+
+ln_indpro = pd.DataFrame(ln_indpro)
+ln_indpro_temp = ln_indpro.iloc[:,0].values
+d_ln_indpro_temp = difference(ln_indpro, 1)
+
+pyplot.plot(date[0:-1], ln_d_indpro)
+pyplot.show()
+print('Skewness: %f' % skew(ln_d_indpro))
+
+plot_acf(d_ln_indpro_temp, lags=60)
+plot_pacf(d_ln_indpro_temp, lags=20)
 
 
-library('readxl') # To read Excel files
-library('urca') # For the Dickey Fuller test
-library('fpp2') # For forecasting
-library('tseries') # To estimate ARMA models
-library('dynlm') # To estimate ARDL models
-library('GetoptLong') # For pretty printing
-library('ggplot2') # For plotting
-library('ggfortify') 
-library(S4Vectors)
+# Adfuller tests
+## INDPRO w/o first differencing
+result = adfuller(ln_indpro_temp)
+print('ADF Statistic: %f' % result[0])
+print('p-value: %f' % result[1])
+print('Critical Values:')
+for key, value in result[4].items():
+    print('\t%s: %.3f' % (key, value))
 
+## INDPRO first differenced
+result2 = adfuller(d_indpro_temp)
+print('ADF Statistic: %f' % result2[0])
+print('p-value: %f' % result2[1])
+print('Critical Values:')
+for key, value in result2[4].items():
+    print('\t%s: %.3f' % (key, value))
+result3 = adfuller(ln_d_indpro)
 
-# Set seed to ensure reproducibility
-set.seed(1)
-# Kris: setting working directory - uncomment as needed
-# setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
-# Loc: setting working directory - uncomment as needed
-# setwd("C:/Users/vinhl/OneDrive/[Work] Translate and Class/[RUG] Dynamic Econometrics/dynamic_econometrics")
-data <- read_excel("FREDMD_march2019.xlsx") #import excel
+## INDPRO first differenced log
+result3 = adfuller(d_ln_indpro_temp)
+>>>>>>> master
+print('ADF Statistic: %f' % result3[0])
+print('p-value: %f' % result3[1])
+print('Critical Values:')
+for key, value in result3[4].items():
+    print('\t%s: %.3f' % (key, value))
 
-#save columns as time series 
-indpro <- ts(data[,'INDPRO'], start = c(1959), end = c(2006,12), frequency = 12)
-t10yffm <- ts(data[,'T10YFFM'], start = c(1959), end = c(2006,12), frequency = 12)
+# ARIMA INDPRO
+## fit model ARIMA(4,1,0), differencing done
+## by ARIMA
+model = ARIMA(indpro, order=(3, 1, 0))
+model_fit = model.fit(disp=0)
+print(model_fit.summary())
 
-numlags <- floor(12*((length(indpro)/100)^0.25)) #max lag lenght
+## fit model ARIMA(4,0,0), differencing done by me
+## beforehand. So this is essentially an ARMA(4, 0)
+## model on the already differenced data
+d_indpro = pd.DataFrame(d_indpro_temp)
+model2 = ARIMA(d_indpro, order=(3, 0, 0))
+model_fit2 = model2.fit(disp=0)
+print(model_fit2.summary())
 
+### model2 is equivalent to model
+### hence, my differenced series is differenced
+### in the same way as the ARIMA function differences
 
-#--------#
-# indpro #
-#--------#
+residuals = pd.DataFrame(model_fit.resid)
+plot_acf(residuals, lags=100)
+residuals.plot()
+pyplot.show()
+residuals.plot(kind='kde')
+pyplot.show()
+print(residuals.describe())
 
-autoplot(indpro)
+## fit model ARIMA(1,0,0) on differenced log
+d_ln_indpro = pd.DataFrame(d_ln_indpro_temp)
+model3 = ARIMA(d_ln_indpro, order=(1, 0, 0))
+model_fit3 = model3.fit(disp=0)
+print(model_fit3.summary())
 
-#d. transformation
-d.indpro <- diff(indpro)
-autoplot(d.indpro)
+residuals = pd.DataFrame(model_fit3.resid)
+plot_acf(residuals, lags=100)
+residuals.plot()
+pyplot.show()
+residuals.plot(kind='kde')
+pyplot.show()
+print(residuals.describe())
 
+### notice that the acf plot of the residuals shows
+### no serial correlation, which implies that
+### there is no need to include an MA (q) coefficient
+### in the ARIMA model
+### also notice that the distribution of the
+### residuals has mean zero, which is good
 
-layout(1:2); acf(d.indpro); pacf(d.indpro)#acf and pacf of d.indpro
-##d.log transformation seems preferable
+# Forecasting
+## forecasting of last 34% differences
+X = d_indpro.values
+size = int(len(X) *0.66)
+train, test = X[0:size], X[size:len(X)]
+history = [x for x in train]
+predictions = list()
+for t in range(len(test)):
+    model = ARIMA(history, order=(4, 0, 0))
+    model_fit = model.fit(disp=0)
+    output = model_fit.forecast()
+    yhat = output[0]
+    predictions.append(yhat)
+    obs = test[t]
+    history.append(obs)
+    # maybe put a # in front of the line below
+    #print('predicted=%f, expected=%f' % (yhat, obs))
+error = mean_squared_error(test, predictions)
+print('Test MSE: %.3f' % error)
 
+pyplot.plot(test)
+pyplot.plot(predictions, color='red')
+pyplot.show()
 
-#d.log transformation
-d.ln.indpro <- 100*diff(log(indpro))
-autoplot(d.ln.indpro)
+## forecasting of last 34% actual index
+X = indpro.values
+size = int(len(X) *0.66)
+train, test = X[0:size], X[size:len(X)]
+history = [x for x in train]
+predictions = list()
+for t in range(len(test)):
+    model = ARIMA(history, order=(4, 1, 0))
+    model_fit = model.fit(disp=0)
+    output = model_fit.forecast()
+    yhat = output[0]
+    predictions.append(yhat)
+    obs = test[t]
+    history.append(obs)
+    # maybe put a # in front of the line below
+    #print('predicted=%f, expected=%f' % (yhat, obs))
+error = mean_squared_error(test, predictions)
+print('Test MSE: %.3f' % error)
 
-layout(1:2); acf(d.ln.indpro); pacf(d.ln.indpro) #acf and pacf of d.ln.indpro
-##suggests AR(p) with p = 1,2,3
+pyplot.plot(test)
+pyplot.plot(predictions, color='red')
+pyplot.show()
 
+## forecasting of last 34% logged differences
+X = d_ln_indpro.values
+size = int(len(X) *0.66)
+train, test = X[0:size], X[size:len(X)]
+history = [x for x in train]
+predictions = list()
+for t in range(len(test)):
+    model = ARIMA(history, order=(1, 0, 0))
+    model_fit = model.fit(disp=0)
+    output = model_fit.forecast()
+    yhat = output[0]
+    predictions.append(yhat)
+    obs = test[t]
+    history.append(obs)
+    # maybe put a # in front of the line below
+    #print('predicted=%f, expected=%f' % (yhat, obs))
+error = mean_squared_error(test, predictions)
+print('Test MSE: %.3f' % error)
 
-#stationarity, Augmented Dickey Fuller test
-adf_d.ln.indpro <- ur.df(d.ln.indpro, lags = numlags, selectlags = "Fixed")
-summary(adf_d.ln.indpro)@teststat #test stat
-summary(adf_d.ln.indpro)@cval #critical values
-##stationary
+pyplot.plot(test)
+pyplot.plot(predictions, color='red')
+pyplot.show()
 
+## forecasting of last 34% logged index
+X = ln_indpro.values
+size = int(len(X) *0.66)
+train, test = X[0:size], X[size:len(X)]
+history = [x for x in train]
+predictions = list()
+for t in range(len(test)):
+    model = ARIMA(history, order=(1, 1, 0))
+    model_fit = model.fit(disp=0)
+    output = model_fit.forecast()
+    yhat = output[0]
+    predictions.append(yhat)
+    obs = test[t]
+    history.append(obs)
+    # maybe put a # in front of the line below
+    #print('predicted=%f, expected=%f' % (yhat, obs))
+error = mean_squared_error(test, predictions)
+print('Test MSE: %.3f' % error)
 
-#modeling d.ln.indpro
-aic_d.ln.indpro <- matrix(NA,5,5)
-colnames(aic_d.ln.indpro) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
-rownames(aic_d.ln.indpro) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
+pyplot.plot(test)
+pyplot.plot(predictions, color='red')
+pyplot.show()
 
-bic_d.ln.indpro <- matrix(NA,5,5)
-colnames(bic_d.ln.indpro) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
-rownames(bic_d.ln.indpro) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
+# T10YFFM
+t10yffm = pd.DataFrame(data, columns= ['T10YFFM'])[0:577]
+pyplot.plot(date, t10yffm)
 
-t_est <- matrix(NA,9,9)
+## T10YFFM acf and pacf
+plot_acf(t10yffm, lags=40)
+plot_pacf(t10yffm, lags=30)
 
-for (i in 0:4){
-  for (j in 0:4){
-    fit <- Arima(d.ln.indpro, order = c(i,0,j))
-    t_est[i+1,j+1] <- length(fit$residuals)
-    aic_d.ln.indpro[i+1,j+1] <- fit$aic
-    bic_d.ln.indpro[i+1,j+1] <- fit$bic
-  }
-}
+## adfuller T10YFFM
+t10yffm_temp = t10yffm.iloc[:,0].values
+result4 = adfuller(t10yffm_temp)
+print('ADF Statistic: %f' % result4[0])
+print('p-value: %f' % result4[1])
+print('Critical Values:')
+for key, value in result4[4].items():
+    print('\t%s: %.3f' % (key, value))
 
-t_est
+# ARIMA T10YFFM
+model4 = ARIMA(t10yffm, order=(1, 0, 1))
+model_fit4 = model4.fit(disp=0)
+print(model_fit4.summary())
 
-#scores
-aic_d.ln.indpro
-bic_d.ln.indpro
-##both seems to suggest AR(3) for diff(INDPRO) 
-##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
+residuals = pd.DataFrame(model_fit4.resid)
+plot_acf(residuals, lags=100)
+residuals.plot()
+pyplot.show()
+residuals.plot(kind='kde')
+pyplot.show()
+print(residuals.describe())
 
+## forecasting of last 34% T10YFFM
+X = t10yffm.values
+size = int(len(X) *0.66)
+train, test = X[0:size], X[size:len(X)]
+history = [x for x in train]
+predictions = list()
+for t in range(len(test)):
+    model = ARIMA(history, order=(1, 0, 1))
+    model_fit = model.fit(disp=0)
+    output = model_fit.forecast()
+    yhat = output[0]
+    predictions.append(yhat)
+    obs = test[t]
+    history.append(obs)
+    # maybe put a # in front of the line below
+    #print('predicted=%f, expected=%f' % (yhat, obs))
+error = mean_squared_error(test, predictions)
+print('Test MSE: %.3f' % error)
 
-d.ln.indpro.arma1 <- Arima(d.ln.indpro, order = c(1,0,0))
-checkresiduals(d.ln.indpro.arma1)
-
-d.ln.indpro.arma2 <- Arima(d.ln.indpro, order = c(2,0,0))
-checkresiduals(d.ln.indpro.arma2)
-
-d.ln.indpro.arma3 <- Arima(d.ln.indpro, order = c(3,0,0))
-checkresiduals(d.ln.indpro.arma3)
-
-#AR(3) coefficients
-d.ln.indpro.arma3
-
-#predictions
-
-
-#--------#
-# t10ffm #
-#--------#
-
-autoplot(t10yffm)
-
-#stationarity, Augmented Dickey Fuller test
-adf_t10yffm <- ur.df(t10yffm, lags = numlags, selectlags = "Fixed")
-summary(adf_t10yffm)@teststat #test stat
-summary(adf_t10yffm)@cval #critical values
-##stationary
-
-layout(1:2); acf(t10yffm); pacf(t10yffm)#acf and pacf of t10yffm
-##MA part to be checked, otherwise AR(3)
-
-
-#modeling t10yffm
-aic_t10yffm <- matrix(NA,5,5)
-colnames(aic_t10yffm) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
-rownames(aic_t10yffm) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
-
-bic_t10yffm <- matrix(NA,5,5)
-colnames(bic_t10yffm) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
-rownames(bic_t10yffm) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
-
-t_est <- matrix(NA,9,9)
-
-
-for (i in 0:4){
-  for (j in 0:4){
-    fit <- Arima(t10yffm, order = c(i,0,j))
-    t_est[i+1,j+1] <- length(fit$residuals)
-    aic_t10yffm[i+1,j+1] <- fit$aic
-    bic_t10yffm[i+1,j+1] <- fit$bic
-  }
-}
-
-t_est
-
-#scores
-aic_t10yffm
-bic_t10yffm
-##ARMA(1,1) and AR(3) to be checked
-##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
-
-
-t10yffm.arma1.1 <- Arima(t10yffm, order = c(1,0,1))
-checkresiduals(t10yffm.arma1.1)
-
-t10yffm.arma3 <- Arima(t10yffm, order = c(3,0,0))
-checkresiduals(t10yffm.arma3)
-
-#AR(3)coefficients
-t10yffm.arma3
+pyplot.plot(test)
+pyplot.plot(predictions, color='red')
+pyplot.show()
