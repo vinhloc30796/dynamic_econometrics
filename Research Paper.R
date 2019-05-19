@@ -3,15 +3,6 @@
 #    Research Paper    #
 #----------------------#
 
-
-library('readxl') # To read Excel files
-library('urca') # For the Dickey Fuller test
-library(#----------------------#
-# Dynamic Econometrics #
-#    Research Paper    #
-#----------------------#
-
-
 library('readxl') # To read Excel files
 library('urca') # For the Dickey Fuller test
 library('fpp2') # For forecasting
