@@ -8,9 +8,11 @@ library('GetoptLong') # For pretty printing
 # Set seed to ensure reproducibility
 set.seed(1)
 
+set
+
 # Import Excel data
 ## Replace with your directory
-fred <- read_excel("C:/Users/vinhl/OneDrive/[Work] Translate and Class/[RUG] Dynamic Econometrics/FREDMD_march2019.xlsx")
+fred <- read_excel("FREDMD_march2019.xlsx")
 
 # Save two time series as variables for convenience
 indpro <- ts(fred[,'INDPRO'], start = c(1959), end = c(2007), frequency=12)
