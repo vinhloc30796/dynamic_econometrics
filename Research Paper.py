@@ -32,7 +32,6 @@ indpro = pd.DataFrame(data, columns= ['INDPRO'])[0:577] # Select only data upto 
 date = pd.DataFrame(data, columns= ['sasdate'])[0:577] # Select only data upto 2007
 
 pyplot.plot(date, indpro)
-
 plot_acf(indpro, lags=60)
 plot_pacf(indpro, lags=10)
 
@@ -66,9 +65,9 @@ for i in range(0, len(indpro_temp)):
 
 ln_indpro = pd.DataFrame(ln_indpro)
 ln_indpro_temp = ln_indpro.iloc[:,0].values
-d_ln_indpro_temp = difference(ln_indpro, 1)
+d_ln_indpro_temp = difference(ln_indpro_temp, 1)
 
-pyplot.plot(date[0:-1], ln_d_indpro)
+pyplot.plot(date[0:-1], d_ln_indpro_temp)
 pyplot.show()
 print('Skewness: %f' % skew(ln_d_indpro))
 
@@ -92,7 +91,6 @@ print('p-value: %f' % result2[1])
 print('Critical Values:')
 for key, value in result2[4].items():
     print('\t%s: %.3f' % (key, value))
-result3 = adfuller(ln_d_indpro)
 
 ## INDPRO first differenced log
 result3 = adfuller(d_ln_indpro_temp)
@@ -153,6 +151,8 @@ print(residuals.describe())
 # Forecasting
 ## forecasting of last 34% differences
 X = d_indpro.values
+len(X) *0.66
+int(len(X) *0.66)
 size = int(len(X) *0.66)
 train, test = X[0:size], X[size:len(X)]
 history = [x for x in train]
@@ -273,7 +273,7 @@ residuals.plot(kind='kde')
 pyplot.show()
 print(residuals.describe())
 
-## forecasting of last 34% T10YFFM
+## forecasting of last 34% T10YFFM with ARMA(1, 1)
 X = t10yffm.values
 size = int(len(X) *0.66)
 train, test = X[0:size], X[size:len(X)]
@@ -281,6 +281,29 @@ history = [x for x in train]
 predictions = list()
 for t in range(len(test)):
     model = ARIMA(history, order=(1, 0, 1))
+    model_fit = model.fit(disp=0)
+    output = model_fit.forecast()
+    yhat = output[0]
+    predictions.append(yhat)
+    obs = test[t]
+    history.append(obs)
+    # maybe put a # in front of the line below
+    #print('predicted=%f, expected=%f' % (yhat, obs))
+error = mean_squared_error(test, predictions)
+print('Test MSE: %.3f' % error)
+
+pyplot.plot(test)
+pyplot.plot(predictions, color='red')
+pyplot.show()
+
+## forecasting of last 34% T10YFFM with ARMA(3, 0)
+X = t10yffm.values
+size = int(len(X) *0.66)
+train, test = X[0:size], X[size:len(X)]
+history = [x for x in train]
+predictions = list()
+for t in range(len(test)):
+    model = ARIMA(history, order=(3, 0, 0))
     model_fit = model.fit(disp=0)
     output = model_fit.forecast()
     yhat = output[0]
