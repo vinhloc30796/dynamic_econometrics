@@ -96,7 +96,6 @@ result3 = adfuller(ln_d_indpro)
 
 ## INDPRO first differenced log
 result3 = adfuller(d_ln_indpro_temp)
->>>>>>> master
 print('ADF Statistic: %f' % result3[0])
 print('p-value: %f' % result3[1])
 print('Critical Values:')
