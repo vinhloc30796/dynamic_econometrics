@@ -22,12 +22,14 @@ import os
 # directory. Also, make sure that you delete all
 # data prior to 2007 in the Excel file.
 cwd = os.getcwd()
+# Loc: Saving this line to run code locally for me
+# os.chdir('C:\\Users\\vinhl\\OneDrive\\[Work] Translate and Class\\[RUG] Dynamic Econometrics\\dynamic_econometrics')
 print(cwd)
 
 # INDPRO
-data = pd.read_excel('FREDMD_march2019_upto2007.xlsx')
-indpro = pd.DataFrame(data, columns= ['INDPRO'])
-date = pd.DataFrame(data, columns= ['sasdate'])
+data = pd.read_excel('FREDMD_march2019.xlsx')
+indpro = pd.DataFrame(data, columns= ['INDPRO'])[0:577] # Select only data upto 2007
+date = pd.DataFrame(data, columns= ['sasdate'])[0:577] # Select only data upto 2007
 
 pyplot.plot(date, indpro)
 
@@ -36,6 +38,8 @@ plot_pacf(indpro, lags=10)
 
 # INDPRO differenced
 indpro_temp = indpro.iloc[:,0].values
+d_test_indpro = indpro_temp[1:-1] - indpro_temp[0:-2]
+
 def difference(dataset, interval):
     diff = list()
     for i in range(interval, len(dataset)):
@@ -59,17 +63,17 @@ ln_indpro = list()
 for i in range(0, len(indpro_temp)):
     value = math.log(indpro_temp[i])
     ln_indpro.append(value)
-    
+
 ln_indpro = pd.DataFrame(ln_indpro)
 ln_indpro_temp = ln_indpro.iloc[:,0].values
-ln_d_indpro = difference(ln_indpro, 1)
+ln_d_indpro = difference(ln_indpro_temp, 1)
 
-pyplot.plot(df_date2, logdf_ip_diff)
+pyplot.plot(date[0:-1], ln_d_indpro)
 pyplot.show()
-print('Skewness: %f' % skew(logdf_ip_diff))
+print('Skewness: %f' % skew(ln_d_indpro))
 
 plot_acf(ln_d_indpro, lags=60)
-plot_pacf(ln_d_indpro, lags=20)    
+plot_pacf(ln_d_indpro, lags=20)
 
 # Adfuller tests
 ## INDPRO w/o first differencing
@@ -80,31 +84,31 @@ print('Critical Values:')
 for key, value in result[4].items():
     print('\t%s: %.3f' % (key, value))
 
-## INDPRO first differenced  
+## INDPRO first differenced
 result2 = adfuller(d_indpro)
 print('ADF Statistic: %f' % result2[0])
 print('p-value: %f' % result2[1])
 print('Critical Values:')
 for key, value in result2[4].items():
     print('\t%s: %.3f' % (key, value))
-    
-## INDPRO first differenced log    
+
+## INDPRO first differenced log
 result3 = adfuller(ln_d_indpro)
 print('ADF Statistic: %f' % result3[0])
 print('p-value: %f' % result3[1])
 print('Critical Values:')
 for key, value in result3[4].items():
     print('\t%s: %.3f' % (key, value))
-    
-# ARIMA INDPRO 
-## fit model ARIMA(4,1,0), differencing done 
+
+# ARIMA INDPRO
+## fit model ARIMA(4,1,0), differencing done
 ## by ARIMA
 model = ARIMA(indpro, order=(3, 1, 0))
 model_fit = model.fit(disp=0)
 print(model_fit.summary())
-    
+
 ## fit model ARIMA(4,0,0), differencing done by me
-## beforehand. So this is essentially an ARMA(4, 0) 
+## beforehand. So this is essentially an ARMA(4, 0)
 ## model on the already differenced data
 d_indpro = pd.DataFrame(d_indpro)
 model2 = ARIMA(d_indpro, order=(3, 0, 0))
@@ -138,11 +142,11 @@ pyplot.show()
 print(residuals.describe())
 
 ### notice that the acf plot of the residuals shows
-### no serial correlation, which implies that 
-### there is no need to include an MA (q) coefficient 
+### no serial correlation, which implies that
+### there is no need to include an MA (q) coefficient
 ### in the ARIMA model
 ### also notice that the distribution of the
-### residuals has mean zero, which is good 
+### residuals has mean zero, which is good
 
 # Forecasting
 ## forecasting of last 34% differences
@@ -238,7 +242,7 @@ pyplot.plot(predictions, color='red')
 pyplot.show()
 
 # T10YFFM
-t10yffm = pd.DataFrame(data, columns= ['T10YFFM'])
+t10yffm = pd.DataFrame(data, columns= ['T10YFFM'])[0:577]
 pyplot.plot(date, t10yffm)
 
 ## T10YFFM acf and pacf
@@ -253,7 +257,7 @@ print('p-value: %f' % result4[1])
 print('Critical Values:')
 for key, value in result4[4].items():
     print('\t%s: %.3f' % (key, value))
-    
+
 # ARIMA T10YFFM
 model4 = ARIMA(t10yffm, order=(1, 0, 1))
 model_fit4 = model4.fit(disp=0)
