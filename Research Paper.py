@@ -149,7 +149,7 @@ print(residuals.describe())
 ### residuals has mean zero, which is good
 
 # Forecasting
-## forecasting of last 34% differences
+## forecasting last 34% of d_indpro using ARMA(4, 0)
 X = d_indpro.values
 len(X) *0.66
 int(len(X) *0.66)
@@ -174,30 +174,7 @@ pyplot.plot(test)
 pyplot.plot(predictions, color='red')
 pyplot.show()
 
-## forecasting of last 34% actual index
-X = indpro.values
-size = int(len(X) *0.66)
-train, test = X[0:size], X[size:len(X)]
-history = [x for x in train]
-predictions = list()
-for t in range(len(test)):
-    model = ARIMA(history, order=(4, 1, 0))
-    model_fit = model.fit(disp=0)
-    output = model_fit.forecast()
-    yhat = output[0]
-    predictions.append(yhat)
-    obs = test[t]
-    history.append(obs)
-    # maybe put a # in front of the line below
-    #print('predicted=%f, expected=%f' % (yhat, obs))
-error = mean_squared_error(test, predictions)
-print('Test MSE: %.3f' % error)
-
-pyplot.plot(test)
-pyplot.plot(predictions, color='red')
-pyplot.show()
-
-## forecasting of last 34% logged differences
+## forecasting last 34% of d_ln_indpro using ARMA(1, 0)
 X = d_ln_indpro.values
 size = int(len(X) *0.66)
 train, test = X[0:size], X[size:len(X)]
@@ -220,14 +197,14 @@ pyplot.plot(test)
 pyplot.plot(predictions, color='red')
 pyplot.show()
 
-## forecasting of last 34% logged index
-X = ln_indpro.values
+## forecasting last 34% of d_ln_indpro using ARMA(3, 0)
+X = d_ln_indpro.values
 size = int(len(X) *0.66)
 train, test = X[0:size], X[size:len(X)]
 history = [x for x in train]
 predictions = list()
 for t in range(len(test)):
-    model = ARIMA(history, order=(1, 1, 0))
+    model = ARIMA(history, order=(3, 0, 0))
     model_fit = model.fit(disp=0)
     output = model_fit.forecast()
     yhat = output[0]
@@ -242,6 +219,7 @@ print('Test MSE: %.3f' % error)
 pyplot.plot(test)
 pyplot.plot(predictions, color='red')
 pyplot.show()
+
 
 # T10YFFM
 t10yffm = pd.DataFrame(data, columns= ['T10YFFM'])[0:577]
@@ -273,7 +251,7 @@ residuals.plot(kind='kde')
 pyplot.show()
 print(residuals.describe())
 
-## forecasting of last 34% T10YFFM with ARMA(1, 1)
+## forecasting last 34% of d_indpro using ARMA(1, 1)
 X = t10yffm.values
 size = int(len(X) *0.66)
 train, test = X[0:size], X[size:len(X)]
@@ -296,7 +274,7 @@ pyplot.plot(test)
 pyplot.plot(predictions, color='red')
 pyplot.show()
 
-## forecasting of last 34% T10YFFM with ARMA(3, 0)
+## forecasting last 34% of d_indpro using ARMA(3, 0)
 X = t10yffm.values
 size = int(len(X) *0.66)
 train, test = X[0:size], X[size:len(X)]
