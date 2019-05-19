@@ -10,8 +10,8 @@ library('fpp2') # For forecasting
 library('tseries') # To estimate ARMA models
 library('dynlm') # To estimate ARDL models
 library('GetoptLong') # For pretty printing
-library('ggplot2')
-library('ggfortify')
+library('ggplot2') # For plotting
+library('ggfortify') 
 library(S4Vectors)
 
 
