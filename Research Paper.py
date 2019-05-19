@@ -31,7 +31,12 @@ data = pd.read_excel('FREDMD_march2019.xlsx')
 indpro = pd.DataFrame(data, columns= ['INDPRO'])[0:577] # Select only data upto 2007
 date = pd.DataFrame(data, columns= ['sasdate'])[0:577] # Select only data upto 2007
 
-pyplot.plot(date, indpro)
+fig = pyplot.figure()
+ax = pyplot.axes()
+ax.plot(date, indpro)
+ax.set(xlabel='Time', ylabel='INDPRO')
+pyplot.show()
+
 plot_acf(indpro, lags=60)
 plot_pacf(indpro, lags=10)
 
@@ -214,7 +219,8 @@ for t in range(len(test)):
     # maybe put a # in front of the line below
     #print('predicted=%f, expected=%f' % (yhat, obs))
 error = mean_squared_error(test, predictions)
-print('Test MSE: %.3f' % error)
+print('Test MSE: %.9f' % ((test-predictions)**2).mean())
+print('Test MSE: %.9f' % error)
 
 pyplot.plot(test)
 pyplot.plot(predictions, color='red')
@@ -291,7 +297,7 @@ for t in range(len(test)):
     # maybe put a # in front of the line below
     #print('predicted=%f, expected=%f' % (yhat, obs))
 error = mean_squared_error(test, predictions)
-print('Test MSE: %.3f' % error)
+print('Test MSE: %.9f' % error)
 
 pyplot.plot(test)
 pyplot.plot(predictions, color='red')
