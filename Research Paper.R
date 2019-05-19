@@ -86,17 +86,17 @@ bic_d.ln.indpro
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
 
-fit <- Arima(d.ln.indpro, order = c(1,0,0))
-checkresiduals(fit)
+d.ln.indpro.arma1 <- Arima(d.ln.indpro, order = c(1,0,0))
+checkresiduals(d.ln.indpro.arma1)
 
-fit <- Arima(d.ln.indpro, order = c(2,0,0))
-checkresiduals(fit)
+d.ln.indpro.arma2 <- Arima(d.ln.indpro, order = c(2,0,0))
+checkresiduals(d.ln.indpro.arma2)
 
-fit <- Arima(d.ln.indpro, order = c(3,0,0))
-checkresiduals(fit)
+d.ln.indpro.arma3 <- Arima(d.ln.indpro, order = c(3,0,0))
+checkresiduals(d.ln.indpro.arma3)
 
 #AR(3) coefficients
-fit
+d.ln.indpro.arma3
 
 
 #--------#
@@ -144,11 +144,11 @@ bic_t10yffm
 ##ARMA(1,1) and AR(3) to be checked
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
-fit <- Arima(t10yffm, order = c(1,0,1))
-checkresiduals(fit)
+t10yffm.arma1.1 <- Arima(t10yffm, order = c(1,0,1))
+checkresiduals(t10yffm.arma1.1)
 
-fit <- Arima(t10yffm, order = c(3,0,0))
-checkresiduals(fit)
+t10yffm.arma3 <- Arima(t10yffm, order = c(3,0,0))
+checkresiduals(t10yffm.arma3)
 
 #AR(3)coefficients
-fit
+t10yffm.arma3
