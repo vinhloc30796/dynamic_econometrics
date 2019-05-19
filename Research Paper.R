@@ -17,8 +17,11 @@ library(S4Vectors)
 
 # Set seed to ensure reproducibility
 set.seed(1)
-
-data <- read_excel("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//FREDMD_march2019.xlsx") #import excel
+# Kris: setting working directory - uncomment as needed
+# setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
+# Loc: setting working directory - uncomment as needed
+# setwd("C:/Users/vinhl/OneDrive/[Work] Translate and Class/[RUG] Dynamic Econometrics/dynamic_econometrics")
+data <- read_excel("FREDMD_march2019.xlsx") #import excel
 
 #save columns as time series 
 indpro <- ts(data[,'INDPRO'], start = c(1959), end = c(2006,12), frequency = 12)
@@ -97,6 +100,8 @@ checkresiduals(d.ln.indpro.arma3)
 
 #AR(3) coefficients
 d.ln.indpro.arma3
+
+#predictions
 
 
 #--------#
