@@ -26,7 +26,9 @@ data <- read_excel("FREDMD_march2019.xlsx") #import excel
 indpro <- ts(data[,'INDPRO'], start = c(1959), end = c(2006,12), frequency = 12)
 t10yffm <- ts(data[,'T10YFFM'], start = c(1959), end = c(2006,12), frequency = 12)
 
-numlags <- floor(12*((length(indpro)/100)^0.25)) #max lag lenght
+numlags <- floor(12*((length(indpro)/100)^0.25)) #max lag length
+
+plot.ts(cbind(indpro,t10yffm), ylab=c("INDPRO", "T10YFFM"))
 
 
 #--------#
@@ -116,6 +118,7 @@ for (t in c(2:length(test))) {
 length(predictions)
 length(test)
 mean((predictions - test)^2)
+layout(1:2); ts.plot(predictions); ts.plot(test)
 
 #--------#
 # t10ffm #
