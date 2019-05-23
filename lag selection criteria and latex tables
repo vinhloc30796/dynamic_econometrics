@@ -1,0 +1,52 @@
+### lag selection criteria and latex tables ###
+
+## d.ln.indpro ##
+
+#scores
+aic_d.ln.indpro
+bic_d.ln.indpro
+###note: ARMA(i, j) scores will be stored in position [i+1, j+1]
+
+#ranking aic
+data.frame(rows=rownames(aic_d.ln.indpro), cols=colnames(aic_d.ln.indpro), stack(as.data.frame(aic_d.ln.indpro)))
+aic_d.ln.indpro <- data.frame(as.table(aic_d.ln.indpro))
+aic_d.ln.indpro <- aic_d.ln.indpro[order(aic_d.ln.indpro$Freq),]
+
+#ranking bic
+data.frame(rows=rownames(bic_d.ln.indpro), cols=colnames(bic_d.ln.indpro), stack(as.data.frame(bic_d.ln.indpro)))
+bic_d.ln.indpro <- data.frame(as.table(bic_d.ln.indpro))
+bic_d.ln.indpro <- bic_d.ln.indpro[order(bic_d.ln.indpro$Freq),]
+
+#latex tables
+aic_d.ln.indpro$x <- paste(aic_d.ln.indpro$Var1, aic_d.ln.indpro$Var2)
+aic_d.ln.indpro <- xtable(aic_d.ln.indpro[1:9, c(4,3)],  caption = 'AIC scores for d.ln.indpro', digits = 1)
+print(aic_d.ln.indpro, file="aic_d.ln.indpro.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n","")))
+#omit file="aic_d.ln.indpro.txt" to print in console
+bic_d.ln.indpro$x <- paste(bic_d.ln.indpro$Var1, bic_d.ln.indpro$Var2)
+bic_d.ln.indpro <- xtable(bic_d.ln.indpro[1:9, c(4,3)],  caption = 'BIC scores for d.ln.indpro', digits = 1)
+print(bic_d.ln.indpro, file="bic_d.ln.indpro.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n","")))
+
+
+## t10yffm ##
+
+#scores
+aic_t10yffm
+bic_t10yffm
+
+#ranking aic
+data.frame(rows=rownames(aic_t10yffm), cols=colnames(aic_t10yffm), stack(as.data.frame(aic_t10yffm)))
+aic_t10yffm <- data.frame(as.table(aic_t10yffm))
+aic_t10yffm <- aic_t10yffm[order(aic_t10yffm$Freq),]
+
+#ranking bic
+data.frame(rows=rownames(bic_t10yffm), cols=colnames(bic_t10yffm), stack(as.data.frame(bic_t10yffm)))
+bic_t10yffm <- data.frame(as.table(bic_t10yffm))
+bic_t10yffm <- bic_t10yffm[order(bic_t10yffm$Freq),]
+
+#latex tables
+aic_t10yffm$x <- paste(aic_t10yffm$Var1, aic_t10yffm$Var2)
+aic_t10yffm <- xtable(aic_t10yffm[1:9, c(4,3)],  caption = 'AIC scores for t10yffm', digits = 1)
+print(aic_t10yffm, file="aic_t10yffm.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n", "")))
+bic_t10yffm$x <- paste(bic_t10yffm$Var1, bic_t10yffm$Var2, sep = "")
+bic_t10yffm <- xtable(bic_t10yffm[1:9, c(4,3)],  caption = 'BIC scores for t10yffm', digits = 1)
+print(bic_t10yffm, file="bic_t10yffm.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n", "")))
