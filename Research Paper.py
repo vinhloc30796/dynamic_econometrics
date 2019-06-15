@@ -13,6 +13,7 @@ import numpy as np
 from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.tsa.vector_ar.var_model import VAR
 from statsmodels.graphics.tsaplots import plot_pacf
 from sklearn.metrics import mean_squared_error
 from scipy.stats import skew
@@ -301,4 +302,83 @@ print('Test MSE: %.9f' % error)
 
 pyplot.plot(test)
 pyplot.plot(predictions, color='red')
+pyplot.show()
+
+# VAR model indpro t10yffm
+d_ln_indpro_var = list()
+d_ln_indpro_var_temp = d_ln_indpro.iloc[:,0].values
+for i in range(0, len(d_ln_indpro_var_temp)):
+    value = d_ln_indpro_var_temp[i]
+    d_ln_indpro_var.append(value)
+
+t10yffm_var = list()
+t10yffm_var_temp = t10yffm.iloc[:,0].values
+for i in range(0, len(t10yffm_var_temp)):
+    value = t10yffm_var_temp[i]
+    t10yffm_var.append(value)
+
+vardata = list()  
+for i in range(0, len(d_ln_indpro_var)):
+    v1 = d_ln_indpro_var[i]
+    v2 = t10yffm_var[i]
+    row = [v1, v2]
+    vardata.append(row)
+
+varmodel = VAR(vardata)
+varmodel_fit = varmodel.fit()
+print(varmodel_fit.summary())
+
+## Attempt at forecasting using VAR
+X = d_ln_indpro.values
+Y = t10yffm.values
+size = int(len(X) *0.66)
+trainX, testX = X[0:size], X[size:len(X)]
+trainY, testY = Y[0:size], Y[size:len(Y)]
+historyX = [x for x in trainX]
+historyY = [y for y in trainY]
+
+history = list()
+for i in range(0, len(historyX)):
+    row = [historyX[i], historyY[i]]
+    history.append(row)
+    
+test = list()
+for i in range(0, len(testX)):
+    row = [testX[i], testY[i]]
+    test.append(row)
+
+predictions = list()
+for t in range(len(test)):
+    model = VAR(history)
+    model_fit = model.fit()
+    output = model_fit.forecast(model_fit.y, steps=1)
+    yhat = output[0]
+    predictions.append(yhat)
+    obs = test[t]
+    history.append(obs)
+
+testindpro = list()
+testt10yffm = list()
+for i in range(0, len(test)):
+    value = test[i]
+    testindpro.append(value[0])
+    testt10yffm.append(value[1])
+
+predindpro = list()
+predt10yffm = list()
+for i in range(0, len(predictions)):
+    value = predictions[i]
+    predindpro.append(value[0])
+    predt10yffm.append(value[1])
+
+errorindpro = mean_squared_error(testindpro, predindpro)
+print('Test MSE: %.3f' % errorindpro)   
+pyplot.plot(testindpro)
+pyplot.plot(predindpro, color='red')
+pyplot.show()
+
+errort10yffm= mean_squared_error(testt10yffm, predt10yffm)
+print('Test MSE: %.3f' % errort10yffm) 
+pyplot.plot(testt10yffm)
+pyplot.plot(predt10yffm, color='red')
 pyplot.show()
