@@ -207,7 +207,10 @@ rownames(bic_ardl) <- c("INDPRO(1)", "INDPRO(2)", "INDPRO(3)", "INDPRO(4)")
 for (i in seq(1,4)) {
   for (j in seq(1,4)) {
     print(paste('Estimating AR(', i,',', j,')'))
-    ardl <- dynlm(d.ln.indpro ~ L(d.ln.indpro, i) + L(t10yffm, j))
+    #Include all lags 
+    #from 1 to i for diff(log INDPRO) 
+    #from 1 to j for T10YFFM
+    ardl <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:i)) + L(t10yffm, (1:j)))
     aic_ardl[i,j] <- AIC(ardl)
     bic_ardl[i,j] <- BIC(ardl)
   }
@@ -217,6 +220,14 @@ aic_ardl
 #AIC suggests ARDL(1,4) for INDPRO ~ T10YFFM
 bic_ardl
 #BIC suggests ARDL(1,4) for INDPRO ~ T10YFFM, too
+
+##ARDL(1,4) and ARDL(3,1) to be checked
+d.ln.indpro.ardl1.4 <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:1)) + L(t10yffm, (1:4)))
+checkresiduals(d.ln.indpro.ardl1.4)
+
+d.ln.indpro.ardl3.1 <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:3)) + L(t10yffm, (1:1)))
+checkresiduals(d.ln.indpro.ardl3.1)
+#ARDL(3,1) is slightly less significant than ARDL(1,4)
 
 #--------#
 # varma  #
