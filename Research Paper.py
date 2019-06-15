@@ -382,3 +382,7 @@ print('Test MSE: %.3f' % errort10yffm)
 pyplot.plot(testt10yffm)
 pyplot.plot(predt10yffm, color='red')
 pyplot.show()
+
+## Impulse Response Analysis
+irf = varmodel_fit.irf(30)
+irf.plot(orth=False)
