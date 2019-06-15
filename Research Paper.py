@@ -27,6 +27,7 @@ cwd = os.getcwd()
 # os.chdir('C:\\Users\\vinhl\\OneDrive\\[Work] Translate and Class\\[RUG] Dynamic Econometrics\\dynamic_econometrics')
 print(cwd)
 
+
 # INDPRO
 data = pd.read_excel('FREDMD_march2019.xlsx')
 indpro = pd.DataFrame(data, columns= ['INDPRO'])[0:577] # Select only data upto 2007
@@ -40,6 +41,7 @@ pyplot.show()
 
 plot_acf(indpro, lags=60)
 plot_pacf(indpro, lags=10)
+
 
 # INDPRO differenced
 indpro_temp = indpro.iloc[:,0].values
@@ -62,6 +64,7 @@ print('Skewness: %f' % skew(d_indpro_temp))
 
 plot_acf(d_indpro_temp, lags=60)
 plot_pacf(d_indpro_temp, lags=20)
+
 
 # INDPRO differenced log
 ln_indpro = list()
@@ -90,6 +93,7 @@ print('Critical Values:')
 for key, value in result[4].items():
     print('\t%s: %.3f' % (key, value))
 
+    
 ## INDPRO first differenced
 result2 = adfuller(d_indpro_temp)
 print('ADF Statistic: %f' % result2[0])
@@ -106,6 +110,7 @@ print('Critical Values:')
 for key, value in result3[4].items():
     print('\t%s: %.3f' % (key, value))
 
+    
 # ARIMA INDPRO
 ## fit model ARIMA(4,1,0), differencing done
 ## by ARIMA
@@ -154,7 +159,9 @@ print(residuals.describe())
 ### also notice that the distribution of the
 ### residuals has mean zero, which is good
 
+
 # Forecasting
+
 ## forecasting last 34% of d_indpro using ARMA(4, 0)
 X = d_indpro.values
 len(X) *0.66
@@ -180,6 +187,7 @@ pyplot.plot(test)
 pyplot.plot(predictions, color='red')
 pyplot.show()
 
+
 ## forecasting last 34% of d_ln_indpro using ARMA(1, 0)
 X = d_ln_indpro.values
 size = int(len(X) *0.66)
@@ -202,6 +210,7 @@ print('Test MSE: %.3f' % error)
 pyplot.plot(test)
 pyplot.plot(predictions, color='red')
 pyplot.show()
+
 
 ## forecasting last 34% of d_ln_indpro using ARMA(3, 0)
 X = d_ln_indpro.values
@@ -304,6 +313,7 @@ pyplot.plot(test)
 pyplot.plot(predictions, color='red')
 pyplot.show()
 
+
 # VAR model indpro t10yffm
 d_ln_indpro_var = list()
 d_ln_indpro_var_temp = d_ln_indpro.iloc[:,0].values
@@ -327,6 +337,7 @@ for i in range(0, len(d_ln_indpro_var)):
 varmodel = VAR(vardata)
 varmodel_fit = varmodel.fit()
 print(varmodel_fit.summary())
+
 
 ## Attempt at forecasting using VAR
 X = d_ln_indpro.values
@@ -382,6 +393,7 @@ print('Test MSE: %.3f' % errort10yffm)
 pyplot.plot(testt10yffm)
 pyplot.plot(predt10yffm, color='red')
 pyplot.show()
+
 
 ## Impulse Response Analysis
 irf = varmodel_fit.irf(30)
