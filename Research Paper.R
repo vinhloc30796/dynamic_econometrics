@@ -86,7 +86,7 @@ t_est
 #scores
 aic_d.ln.indpro
 bic_d.ln.indpro
-##both seems to suggest AR(3) for diff(INDPRO) 
+##both seems to suggest AR(3) for diff(log INDPRO) 
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
 
@@ -191,3 +191,33 @@ for (t in c(2:length(test))) {
 length(predictions)
 length(test)
 mean((predictions - test)^2)
+
+#--------#
+#  ardl  #
+#--------#
+
+aic_ardl <- matrix(NA, nrow=4, ncol=4)
+colnames(aic_ardl) <- c("T10YFFM(1)", "T10YFFM(2)", "T10YFFM(3)", "T10YFFM(4)")
+rownames(aic_ardl) <- c("INDPRO(1)", "INDPRO(2)", "INDPRO(3)", "INDPRO(4)")
+
+bic_ardl <- matrix(NA, nrow=4, ncol=4)
+colnames(bic_ardl) <- c("T10YFFM(1)", "T10YFFM(2)", "T10YFFM(3)", "T10YFFM(4)")
+rownames(bic_ardl) <- c("INDPRO(1)", "INDPRO(2)", "INDPRO(3)", "INDPRO(4)")
+
+for (i in seq(1,4)) {
+  for (j in seq(1,4)) {
+    print(paste('Estimating AR(', i,',', j,')'))
+    ardl <- dynlm(d.ln.indpro ~ L(d.ln.indpro, i) + L(t10yffm, j))
+    aic_ardl[i,j] <- AIC(ardl)
+    bic_ardl[i,j] <- BIC(ardl)
+  }
+}
+
+aic_ardl
+#AIC suggests ARDL(1,4) for INDPRO ~ T10YFFM
+bic_ardl
+#BIC suggests ARDL(1,4) for INDPRO ~ T10YFFM, too
+
+#--------#
+# varma  #
+#--------#
