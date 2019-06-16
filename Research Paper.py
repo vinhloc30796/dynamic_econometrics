@@ -335,11 +335,29 @@ for i in range(0, len(d_ln_indpro_var)):
     vardata.append(row)
 
 varmodel = VAR(vardata)
-varmodel_fit = varmodel.fit()
+varmodel_fit = varmodel.fit(3) ##VAR(1) has lower criterion, but correlation in ACF of T10YFFM residuals, VAR(3) better
 print(varmodel_fit.summary())
 
+## Residuals
+residuals = pd.DataFrame(varmodel_fit.resid)
 
-## Attempt at forecasting using VAR
+plot_acf(residuals[0], lags=100)
+pyplot.show()
+residuals[0].plot()
+pyplot.show()
+residuals[0].plot(kind='kde')
+pyplot.show()
+
+plot_acf(residuals[1], lags=100)
+pyplot.show()
+residuals[1].plot()
+pyplot.show()
+residuals[1].plot(kind='kde')
+pyplot.show()
+
+print(residuals.describe())
+
+## Forecasting using VAR
 X = d_ln_indpro.values
 Y = t10yffm.values
 size = int(len(X) *0.66)
