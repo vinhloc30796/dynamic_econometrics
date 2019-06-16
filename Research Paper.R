@@ -50,7 +50,7 @@ layout(1:2); acf(d.indpro); pacf(d.indpro)#acf and pacf of d.indpro
 
 
 #d.log transformation
-d.ln.indpro <- 100*diff(log(indpro))
+d.ln.indpro <- diff(log(indpro))
 autoplot(d.ln.indpro)
 
 layout(1:2); acf(d.ln.indpro); pacf(d.ln.indpro) #acf and pacf of d.ln.indpro
@@ -312,7 +312,7 @@ print(summ$coefficients, digits = 1)
 
 y <- cbind(d.ln.indpro, t10yffm)
 y <- y[-c(1), ]
-var <- VAR(y, p = 4, type = c("const"))
+var <- VAR(y, p = 3, type = c("const"))
 corder1 <- order(names(var$varresult$d.ln.indpro$coefficients))
 corder2 <- order(names(summ$coefficients[,1]))
 coefvar <- cbind(var$varresult$d.ln.indpro$coefficients[corder1], summ$coefficients[corder2])
