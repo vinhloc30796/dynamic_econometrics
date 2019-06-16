@@ -306,6 +306,38 @@ d.ln.indpro.ardl3.1 <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:3)) + L(t10yffm, (1
 checkresiduals(d.ln.indpro.ardl3.1)
 #ARDL(3,1) is slightly less significant than ARDL(1,4)
 
+#prediction function
+forecast_ARDL <- function(split_size, y, x, n_ylag, n_xlag){
+  #define lengths of sample for convenience
+  train_length <- floor(length(y) *split_size)
+  test_length <- length(y) - train_length
+  #save test set to calculate MSE later
+  y_test <- tail(y, test_length)
+  
+  #loop as many times as needed to get enough predictions
+  for (t in c(0:test_length)) {
+    #define the train set; convert to time-series for dynlm 
+    #expand train set by 1 every loop
+    y_train <- ts(y[0:train_length+t])
+    x_train <- ts(x[0:train_length+t]) 
+    #fit the model onto initial train-test set
+    model <- dynlm(y_train ~ L(y_train, (1:n_ylag)) + L(x_train, (1:n_xlag)))
+    #create indie vars (including intercept, n_ylag of y, n_xlag of x)
+    #reverse indie vars so they are in the order of model$coeffs
+    indie_vars <- c(1, rev(tail(y_train, n_ylag)), rev(tail(x_train, n_xlag))) 
+    #calculate and save initial prediction
+    predictions[t+1] <- sum(model$coefficients * indie_vars)
+  }  
+  return(predictions)
+}
+
+#prediction for ARDL(1,4)
+d.ln.indpro.ardl1.4.preds <- forecast_ARDL(0.66, d.ln.indpro, t10yffm, 1, 4)
+mean((d.ln.indpro.ardl1.4.preds - d.ln.indpro.test)^2)
+#prediction for ARDL(3,1)
+d.ln.indpro.ardl3.1.preds <- forecast_ARDL(0.66, d.ln.indpro, t10yffm, 3, 1)
+mean((d.ln.indpro.ardl3.1.preds - d.ln.indpro.test)^2)
+
 #--------#
 # varma  #
 #--------#
