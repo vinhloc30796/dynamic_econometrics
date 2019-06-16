@@ -228,24 +228,6 @@ checkresiduals(t10yffm.arma3)
 #AR(3)coefficients
 t10yffm.arma3
 
-get_mse_from_prediction <- function(dataset, model, dataset_split=0.66){
-  train_test_split <- floor(length(dataset) *0.66)
-  train <- dataset[0:train_test_split]
-  test <- dataset[train_test_split:length(t10yffm)]
-  model <- Arima(train, order=c(3, 0, 0))
-  predictions <- predict(model, 1)$pred
-  history <- append(train, test[1])
-  for (t in c(2:length(test))) {
-    model <- Arima(history, order=c(3, 0, 0))
-    predictions <- append(predictions, predict(model, 1)$pred)
-    history <- append(history, test[t])
-  }
-  
-  length(predictions)
-  length(test)
-  mean((predictions - test)^2)
-}
-
 #predictions
 train_test_split <- floor(length(t10yffm) *0.66)
 train <- t10yffm[0:train_test_split]
@@ -292,30 +274,29 @@ aic_ardl
 bic_ardl
 #BIC suggests ARDL(1,4) for INDPRO ~ T10YFFM, too
 
-
 #ranking aic
-data.frame(rows=rownames(aic_ardl), cols=colnames(aic_ardl), stack(as.data.frame(aic_ardl)))
-aic_ardl <- data.frame(as.table(aic_ardl))
-aic_ardl <- aic_ardl[order(aic_ardl$Freq),]
-
+aic_ardl.ranked <- data.frame(rows=rownames(aic_ardl), cols=colnames(aic_ardl), stack(as.data.frame(aic_ardl)))[, c("rows", "ind", "values")]
+colnames(aic_ardl.ranked) <-  c("INDPRO Lags", "T10YFFM Lags", "AIC")
+aic_ardl.ranked <- na.omit(aic_ardl.ranked[order(aic_ardl.ranked$AIC),][complete.cases(aic_ardl.ranked),])
 
 #ranking bic
-data.frame(rows=rownames(bic_ardl), cols=colnames(bic_ardl), stack(as.data.frame(bic_ardl)))
-bic_ardl <- data.frame(as.table(bic_ardl))
-bic_ardl <- bic_ardl[order(bic_ardl$Freq),]
-
+bic_ardl.ranked <- data.frame(rows=rownames(bic_ardl), cols=colnames(bic_ardl), stack(as.data.frame(bic_ardl)))[, c("rows", "ind", "values")]
+colnames(bic_ardl.ranked) <-  c("INDPRO Lags", "T10YFFM Lags", "BIC")
+bic_ardl.ranked <- na.omit(bic_ardl.ranked[order(bic_ardl.ranked$BIC),][complete.cases(bic_ardl.ranked),])
 
 #latex tables
-aic_ardl$x <- paste(aic_ardl$Var1, aic_ardl$Var2)
-aic_ardl <- xtable(aic_ardl[1:9, c(4,3)],  caption = 'AIC scores for ARDL', digits = 1)
-print(aic_ardl, file="aic_ardl.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n","")))
-#omit file="aic_d.ln.indpro.txt" to print in console
-
-bic_ardl$x <- paste(bic_ardl$Var1, bic_ardl$Var2)
-bic_ardl <- xtable(bic_ardl[1:9, c(4,3)],  caption = 'BIC scores for ARDL', digits = 1)
-print(bic_ardl, file="bic_ardl.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n","")))
-
-
+print(
+  xtable(aic_ardl.ranked[1:9,], caption = 'AIC scores for different ARDL models when fitting on INDPRO', digits = 1), 
+  file="aic_ardl.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n",""))
+)
+print(
+  xtable(bic_ardl.ranked[1:9,], caption = 'BIC scores for different ARDL models when fitting on INDPRO', digits = 1), 
+  file="bic_ardl.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n",""))
+)
 
 ##ARDL(1,4) and ARDL(3,1) to be checked
 d.ln.indpro.ardl1.4 <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:1)) + L(t10yffm, (1:4)))
