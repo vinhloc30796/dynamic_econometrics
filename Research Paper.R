@@ -20,7 +20,7 @@ library(xtable) #latex output
 # Set seed to ensure reproducibility
 set.seed(1)
 # Kris: setting working directory - uncomment as needed
-setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
+# setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
 # Loc: setting working directory - uncomment as needed
 # setwd("C:/Users/vinhl/OneDrive/[Work] Translate and Class/[RUG] Dynamic Econometrics/dynamic_econometrics")
 data <- read_excel("FREDMD_march2019.xlsx") #import excel
@@ -34,9 +34,9 @@ numlags <- floor(12*((length(indpro)/100)^0.25)) #max lag length
 plot.ts(cbind(indpro,t10yffm), ylab=c("INDPRO", "T10YFFM"))
 
 
-#--------#
-# indpro #
-#--------#
+#---------#
+# INDPRO  #
+#---------#
 
 autoplot(indpro)
 
@@ -73,7 +73,8 @@ bic_d.ln.indpro <- matrix(NA,5,5)
 colnames(bic_d.ln.indpro) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
 rownames(bic_d.ln.indpro) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
 
-t_est <- matrix(NA,9,9)
+#check for sample size
+t_est <- matrix(NA,5,5)
 
 for (i in 0:4){
   for (j in 0:4){
@@ -93,27 +94,28 @@ bic_d.ln.indpro
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
 #ranking aic
-data.frame(rows=rownames(aic_d.ln.indpro), cols=colnames(aic_d.ln.indpro), stack(as.data.frame(aic_d.ln.indpro)))
-aic_d.ln.indpro <- data.frame(as.table(aic_d.ln.indpro))
-aic_d.ln.indpro <- aic_d.ln.indpro[order(aic_d.ln.indpro$Freq),]
-
+aic_d.ln.indpro.ranked <- data.frame(rows=rownames(aic_d.ln.indpro), cols=colnames(aic_d.ln.indpro), stack(as.data.frame(aic_d.ln.indpro)))[, c("rows", "ind", "values")]
+colnames(aic_d.ln.indpro.ranked) <-  c("AR", "MA", "AIC")
+aic_d.ln.indpro.ranked <- na.omit(aic_d.ln.indpro.ranked[order(aic_d.ln.indpro.ranked$AIC),][complete.cases(aic_d.ln.indpro.ranked),])
 
 #ranking bic
-data.frame(rows=rownames(bic_d.ln.indpro), cols=colnames(bic_d.ln.indpro), stack(as.data.frame(bic_d.ln.indpro)))
-bic_d.ln.indpro <- data.frame(as.table(bic_d.ln.indpro))
-bic_d.ln.indpro <- bic_d.ln.indpro[order(bic_d.ln.indpro$Freq),]
-
+bic_d.ln.indpro.ranked <- data.frame(rows=rownames(bic_d.ln.indpro), cols=colnames(bic_d.ln.indpro), stack(as.data.frame(bic_d.ln.indpro)))[, c("rows", "ind", "values")]
+colnames(bic_d.ln.indpro.ranked) <-  c("AR", "MA", "BIC")
+bic_d.ln.indpro.ranked <- na.omit(bic_d.ln.indpro.ranked[order(bic_d.ln.indpro.ranked$BIC),][complete.cases(bic_d.ln.indpro.ranked),])
 
 #latex tables
-aic_d.ln.indpro$x <- paste(aic_d.ln.indpro$Var1, aic_d.ln.indpro$Var2)
-aic_d.ln.indpro <- xtable(aic_d.ln.indpro[1:9, c(4,3)],  caption = 'AIC scores for d.ln.indpro', digits = 1)
-print(aic_d.ln.indpro, file="aic_d.ln.indpro.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n","")))
-#omit file="aic_d.ln.indpro.txt" to print in console
-
-bic_d.ln.indpro$x <- paste(bic_d.ln.indpro$Var1, bic_d.ln.indpro$Var2)
-bic_d.ln.indpro <- xtable(bic_d.ln.indpro[1:9, c(4,3)],  caption = 'BIC scores for d.ln.indpro', digits = 1)
-print(bic_d.ln.indpro, file="bic_d.ln.indpro.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n","")))
-
+print(
+  xtable(aic_d.ln.indpro.ranked[1:9,], caption = 'AIC scores for different ARMA models when fitting on diff(ln indpro)', digits = 1), 
+  file="aic_d.ln.indpro.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n",""))
+)
+print(
+  xtable(bic_d.ln.indpro.ranked[1:9,], caption = 'BIC scores for different ARMA models when fitting on diff(ln indpro)', digits = 1), 
+  file="bic_d.ln.indpro.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n",""))
+)
 
 #residuals
 d.ln.indpro.arma1 <- Arima(d.ln.indpro, order = c(1,0,0))
@@ -146,9 +148,9 @@ length(test)
 mean((predictions - test)^2)
 layout(1:2); ts.plot(predictions); ts.plot(test)
 
-#--------#
-# t10ffm #
-#--------#
+#---------#
+# T10YFFM #
+#---------#
 
 autoplot(t10yffm)
 
@@ -171,7 +173,8 @@ bic_t10yffm <- matrix(NA,5,5)
 colnames(bic_t10yffm) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
 rownames(bic_t10yffm) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
 
-t_est <- matrix(NA,9,9)
+#check for sample size
+t_est <- matrix(NA,5,5)
 
 
 for (i in 0:4){
@@ -191,27 +194,29 @@ bic_t10yffm
 ##ARMA(1,1) and AR(3) to be checked
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
-
 #ranking aic
-data.frame(rows=rownames(aic_t10yffm), cols=colnames(aic_t10yffm), stack(as.data.frame(aic_t10yffm)))
-aic_t10yffm <- data.frame(as.table(aic_t10yffm))
-aic_t10yffm <- aic_t10yffm[order(aic_t10yffm$Freq),]
-
+aic_t10yffm.ranked <- data.frame(rows=rownames(aic_t10yffm), cols=colnames(aic_t10yffm), stack(as.data.frame(aic_t10yffm)))[, c("rows", "ind", "values")]
+colnames(aic_t10yffm.ranked) <-  c("AR", "MA", "AIC")
+aic_t10yffm.ranked <- na.omit(aic_t10yffm.ranked[order(aic_t10yffm.ranked$AIC),][complete.cases(aic_t10yffm.ranked),])
 
 #ranking bic
-data.frame(rows=rownames(bic_t10yffm), cols=colnames(bic_t10yffm), stack(as.data.frame(bic_t10yffm)))
-bic_t10yffm <- data.frame(as.table(bic_t10yffm))
-bic_t10yffm <- bic_t10yffm[order(bic_t10yffm$Freq),]
-
+bic_t10yffm.ranked <- data.frame(rows=rownames(bic_t10yffm), cols=colnames(bic_t10yffm), stack(as.data.frame(bic_t10yffm)))[, c("rows", "ind", "values")]
+colnames(bic_t10yffm.ranked) <-  c("AR", "MA", "BIC")
+bic_t10yffm.ranked <- na.omit(bic_t10yffm.ranked[order(bic_t10yffm.ranked$BIC),][complete.cases(bic_t10yffm.ranked),])
 
 #latex tables
-aic_t10yffm$x <- paste(aic_t10yffm$Var1, aic_t10yffm$Var2)
-aic_t10yffm <- xtable(aic_t10yffm[1:9, c(4,3)],  caption = 'AIC scores for t10yffm', digits = 1)
-print(aic_t10yffm, file="aic_t10yffm.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n", "")))
-bic_t10yffm$x <- paste(bic_t10yffm$Var1, bic_t10yffm$Var2, sep = "")
-bic_t10yffm <- xtable(bic_t10yffm[1:9, c(4,3)],  caption = 'BIC scores for t10yffm', digits = 1)
-print(bic_t10yffm, file="bic_t10yffm.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n", "")))
-
+print(
+  xtable(aic_t10yffm.ranked[1:9,], caption = 'AIC scores for different ARMA models when fitting on T10YFFM', digits = 1), 
+  file="aic_t10yffm.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n",""))
+)
+print(
+  xtable(bic_t10yffm.ranked[1:9,], caption = 'BIC scores for different ARMA models when fitting on T10YFFM', digits = 1), 
+  file="bic_t10yffm.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n",""))
+)
 
 #residuals
 t10yffm.arma1.1 <- Arima(t10yffm, order = c(1,0,1))
@@ -222,6 +227,24 @@ checkresiduals(t10yffm.arma3)
 
 #AR(3)coefficients
 t10yffm.arma3
+
+get_mse_from_prediction <- function(dataset, model, dataset_split=0.66){
+  train_test_split <- floor(length(dataset) *0.66)
+  train <- dataset[0:train_test_split]
+  test <- dataset[train_test_split:length(t10yffm)]
+  model <- Arima(train, order=c(3, 0, 0))
+  predictions <- predict(model, 1)$pred
+  history <- append(train, test[1])
+  for (t in c(2:length(test))) {
+    model <- Arima(history, order=c(3, 0, 0))
+    predictions <- append(predictions, predict(model, 1)$pred)
+    history <- append(history, test[t])
+  }
+  
+  length(predictions)
+  length(test)
+  mean((predictions - test)^2)
+}
 
 #predictions
 train_test_split <- floor(length(t10yffm) *0.66)
