@@ -10,14 +10,17 @@ library('tseries') # To estimate ARMA models
 library('dynlm') # To estimate ARDL models
 library('GetoptLong') # For pretty printing
 library('ggplot2') # For plotting
-library('ggfortify') 
-library(S4Vectors)
+library('ggfortify')
+library('vars')
+#library(S4Vectors)
+library(reshape2) #ranking
+library(xtable) #latex output
 
 
 # Set seed to ensure reproducibility
 set.seed(1)
 # Kris: setting working directory - uncomment as needed
-# setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
+setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
 # Loc: setting working directory - uncomment as needed
 # setwd("C:/Users/vinhl/OneDrive/[Work] Translate and Class/[RUG] Dynamic Econometrics/dynamic_econometrics")
 data <- read_excel("FREDMD_march2019.xlsx") #import excel
@@ -89,7 +92,30 @@ bic_d.ln.indpro
 ##both seems to suggest AR(3) for diff(log INDPRO) 
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
+#ranking aic
+data.frame(rows=rownames(aic_d.ln.indpro), cols=colnames(aic_d.ln.indpro), stack(as.data.frame(aic_d.ln.indpro)))
+aic_d.ln.indpro <- data.frame(as.table(aic_d.ln.indpro))
+aic_d.ln.indpro <- aic_d.ln.indpro[order(aic_d.ln.indpro$Freq),]
 
+
+#ranking bic
+data.frame(rows=rownames(bic_d.ln.indpro), cols=colnames(bic_d.ln.indpro), stack(as.data.frame(bic_d.ln.indpro)))
+bic_d.ln.indpro <- data.frame(as.table(bic_d.ln.indpro))
+bic_d.ln.indpro <- bic_d.ln.indpro[order(bic_d.ln.indpro$Freq),]
+
+
+#latex tables
+aic_d.ln.indpro$x <- paste(aic_d.ln.indpro$Var1, aic_d.ln.indpro$Var2)
+aic_d.ln.indpro <- xtable(aic_d.ln.indpro[1:9, c(4,3)],  caption = 'AIC scores for d.ln.indpro', digits = 1)
+print(aic_d.ln.indpro, file="aic_d.ln.indpro.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n","")))
+#omit file="aic_d.ln.indpro.txt" to print in console
+
+bic_d.ln.indpro$x <- paste(bic_d.ln.indpro$Var1, bic_d.ln.indpro$Var2)
+bic_d.ln.indpro <- xtable(bic_d.ln.indpro[1:9, c(4,3)],  caption = 'BIC scores for d.ln.indpro', digits = 1)
+print(bic_d.ln.indpro, file="bic_d.ln.indpro.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n","")))
+
+
+#residuals
 d.ln.indpro.arma1 <- Arima(d.ln.indpro, order = c(1,0,0))
 checkresiduals(d.ln.indpro.arma1)
 
@@ -166,6 +192,28 @@ bic_t10yffm
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
 
+#ranking aic
+data.frame(rows=rownames(aic_t10yffm), cols=colnames(aic_t10yffm), stack(as.data.frame(aic_t10yffm)))
+aic_t10yffm <- data.frame(as.table(aic_t10yffm))
+aic_t10yffm <- aic_t10yffm[order(aic_t10yffm$Freq),]
+
+
+#ranking bic
+data.frame(rows=rownames(bic_t10yffm), cols=colnames(bic_t10yffm), stack(as.data.frame(bic_t10yffm)))
+bic_t10yffm <- data.frame(as.table(bic_t10yffm))
+bic_t10yffm <- bic_t10yffm[order(bic_t10yffm$Freq),]
+
+
+#latex tables
+aic_t10yffm$x <- paste(aic_t10yffm$Var1, aic_t10yffm$Var2)
+aic_t10yffm <- xtable(aic_t10yffm[1:9, c(4,3)],  caption = 'AIC scores for t10yffm', digits = 1)
+print(aic_t10yffm, file="aic_t10yffm.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n", "")))
+bic_t10yffm$x <- paste(bic_t10yffm$Var1, bic_t10yffm$Var2, sep = "")
+bic_t10yffm <- xtable(bic_t10yffm[1:9, c(4,3)],  caption = 'BIC scores for t10yffm', digits = 1)
+print(bic_t10yffm, file="bic_t10yffm.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n", "")))
+
+
+#residuals
 t10yffm.arma1.1 <- Arima(t10yffm, order = c(1,0,1))
 checkresiduals(t10yffm.arma1.1)
 
@@ -193,7 +241,7 @@ length(test)
 mean((predictions - test)^2)
 
 #--------#
-#  ardl  #
+#  ARDL  #
 #--------#
 
 aic_ardl <- matrix(NA, nrow=4, ncol=4)
@@ -221,6 +269,31 @@ aic_ardl
 bic_ardl
 #BIC suggests ARDL(1,4) for INDPRO ~ T10YFFM, too
 
+
+#ranking aic
+data.frame(rows=rownames(aic_ardl), cols=colnames(aic_ardl), stack(as.data.frame(aic_ardl)))
+aic_ardl <- data.frame(as.table(aic_ardl))
+aic_ardl <- aic_ardl[order(aic_ardl$Freq),]
+
+
+#ranking bic
+data.frame(rows=rownames(bic_ardl), cols=colnames(bic_ardl), stack(as.data.frame(bic_ardl)))
+bic_ardl <- data.frame(as.table(bic_ardl))
+bic_ardl <- bic_ardl[order(bic_ardl$Freq),]
+
+
+#latex tables
+aic_ardl$x <- paste(aic_ardl$Var1, aic_ardl$Var2)
+aic_ardl <- xtable(aic_ardl[1:9, c(4,3)],  caption = 'AIC scores for ARDL', digits = 1)
+print(aic_ardl, file="aic_ardl.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{AIC} \\\\\n","")))
+#omit file="aic_d.ln.indpro.txt" to print in console
+
+bic_ardl$x <- paste(bic_ardl$Var1, bic_ardl$Var2)
+bic_ardl <- xtable(bic_ardl[1:9, c(4,3)],  caption = 'BIC scores for ARDL', digits = 1)
+print(bic_ardl, file="bic_ardl.txt", include.rownames = FALSE, include.colnames = FALSE, hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n","")))
+
+
+
 ##ARDL(1,4) and ARDL(3,1) to be checked
 d.ln.indpro.ardl1.4 <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:1)) + L(t10yffm, (1:4)))
 checkresiduals(d.ln.indpro.ardl1.4)
@@ -232,3 +305,29 @@ checkresiduals(d.ln.indpro.ardl3.1)
 #--------#
 # varma  #
 #--------#
+
+ardl4 <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:4)) + L(t10yffm, (1:4)))
+summ <- summary(ardl4)
+print(summ$coefficients, digits = 1)
+
+y <- cbind(d.ln.indpro, t10yffm)
+y <- y[-c(1), ]
+var <- VAR(y, p = 4, type = c("const"))
+corder1 <- order(names(var$varresult$d.ln.indpro$coefficients))
+corder2 <- order(names(summ$coefficients[,1]))
+coefvar <- cbind(var$varresult$d.ln.indpro$coefficients[corder1], summ$coefficients[corder2])
+colnames(coefvar) <- c("VAR(4)", "ARDL(4,4)")
+print(coefvar, digits = 1)
+
+#impulse response 
+irf <- irf(var, impulse = c("t10yffm"), response = c("d.ln.indpro"), ortho = FALSE)
+plot(irf, plot.type = c("single"))
+
+irf <- irf(var, impulse = c("t10yffm"), response = c("d.ln.indpro"), ortho = TRUE)
+plot(irf, plot.type = c("single"))
+## orthogonalizing not influencial 
+
+#lag order selection
+var_ic <- VARselect(y, type = c("const"), lag.max = 8)
+ic <- as.data.frame(t(var_ic$criteria))
+ggplot(data = ic, aes(x = seq(1,8), y = ic$`SC(n)`)) + geom_line() + ylab("BIC")
