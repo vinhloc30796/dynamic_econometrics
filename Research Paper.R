@@ -20,7 +20,7 @@ library(xtable) #latex output
 # Set seed to ensure reproducibility
 set.seed(1)
 # Kris: setting working directory - uncomment as needed
-# setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
+setwd("C:/Users/Kris Rama/Desktop/Econometrics/Dynamic Econometrics/Research Paper//")
 # Loc: setting working directory - uncomment as needed
 # setwd("C:/Users/vinhl/OneDrive/[Work] Translate and Class/[RUG] Dynamic Econometrics/dynamic_econometrics")
 data <- read_excel("FREDMD_march2019.xlsx") #import excel
@@ -31,6 +31,7 @@ t10yffm <- ts(data[,'T10YFFM'], start = c(1959), end = c(2006,12), frequency = 1
 
 numlags <- floor(12*((length(indpro)/100)^0.25)) #max lag length
 split_size <- 0.66 #default split size
+options(scipen=999) #prevent scientific notaion
 
 plot.ts(cbind(indpro,t10yffm), ylab=c("INDPRO", "T10YFFM"))
 
@@ -123,15 +124,26 @@ bic_d.ln.indpro <- matrix(NA,5,5)
 colnames(bic_d.ln.indpro) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
 rownames(bic_d.ln.indpro) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
 
+mse_d.ln.indpro <- matrix(NA,5,5)
+colnames(mse_d.ln.indpro) <- c("MA(0)", "MA(1)", "MA(2)", "MA(3)", "MA(4)")
+rownames(mse_d.ln.indpro) <- c("AR(0)", "AR(1)", "AR(2)", "AR(3)", "AR(4)")
+
+#save test set
+train_test_split <- floor(length(d.ln.indpro) * split_size)
+d.ln.indpro.test <- d.ln.indpro[train_test_split:length(d.ln.indpro)]
+
 #check for sample size
 t_est <- matrix(NA,5,5)
 
 for (i in 0:4){
   for (j in 0:4){
+    print(paste('Estimating ARMA(',i,',',j,')'))
     fit <- Arima(d.ln.indpro, order = c(i,0,j))
     t_est[i+1,j+1] <- length(fit$residuals)
     aic_d.ln.indpro[i+1,j+1] <- fit$aic
     bic_d.ln.indpro[i+1,j+1] <- fit$bic
+    predictions <- forecast_ARMA(split_size, d.ln.indpro, n_ar=i, n_ma=j)
+    mse_d.ln.indpro[i+1,j+1] <- mean((predictions - d.ln.indpro.test)^2)
   }
 }
 
@@ -140,6 +152,7 @@ t_est
 #scores
 aic_d.ln.indpro
 bic_d.ln.indpro
+mse_d.ln.indpro
 ##both seems to suggest AR(3) for diff(log INDPRO) 
 ##note: ARMA(i, j) scores will be stored in position [i+1, j+1]
 
@@ -152,6 +165,12 @@ aic_d.ln.indpro.ranked <- na.omit(aic_d.ln.indpro.ranked[order(aic_d.ln.indpro.r
 bic_d.ln.indpro.ranked <- data.frame(rows=rownames(bic_d.ln.indpro), cols=colnames(bic_d.ln.indpro), stack(as.data.frame(bic_d.ln.indpro)))[, c("rows", "ind", "values")]
 colnames(bic_d.ln.indpro.ranked) <-  c("AR", "MA", "BIC")
 bic_d.ln.indpro.ranked <- na.omit(bic_d.ln.indpro.ranked[order(bic_d.ln.indpro.ranked$BIC),][complete.cases(bic_d.ln.indpro.ranked),])
+
+#ranking mse
+mse_d.ln.indpro.ranked <- data.frame(rows=rownames(mse_d.ln.indpro), cols=colnames(mse_d.ln.indpro), stack(as.data.frame(mse_d.ln.indpro)))[, c("rows", "ind", "values")]
+colnames(mse_d.ln.indpro.ranked) <-  c("AR", "MA", "MSE")
+mse_d.ln.indpro.ranked <- na.omit(mse_d.ln.indpro.ranked[order(mse_d.ln.indpro.ranked$MSE),][complete.cases(mse_d.ln.indpro.ranked),])
+
 
 #latex tables
 print(
@@ -166,29 +185,29 @@ print(
   include.rownames = FALSE, include.colnames = TRUE, 
   hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n",""))
 )
+print(
+  xtable(mse_d.ln.indpro.ranked[1:9,], caption = 'MSE values for different ARMA models', digits = 1), 
+  file="mse_d.ln.indpro.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{MSE} \\\\\n",""))
+)
 
-#residuals
-d.ln.indpro.arma1 <- Arima(d.ln.indpro, order = c(1,0,0))
-checkresiduals(d.ln.indpro.arma1)
+#check residuals based on BIC ranking
+d.ln.indpro.arma10 <- Arima(d.ln.indpro, order = c(1,0,0))
+checkresiduals(d.ln.indpro.arma10)
 
-d.ln.indpro.arma2 <- Arima(d.ln.indpro, order = c(2,0,0))
-checkresiduals(d.ln.indpro.arma2)
+d.ln.indpro.arma11 <- Arima(d.ln.indpro, order = c(1,0,1))
+checkresiduals(d.ln.indpro.arma11)
 
-d.ln.indpro.arma3 <- Arima(d.ln.indpro, order = c(3,0,0))
-checkresiduals(d.ln.indpro.arma3)
+d.ln.indpro.arma30 <- Arima(d.ln.indpro, order = c(3,0,0))
+checkresiduals(d.ln.indpro.arma30)
 
-#AR(3) coefficients
-d.ln.indpro.arma3
+#AR(1) coefficients
+d.ln.indpro.arma10
 
 #save test set
 train_test_split <- floor(length(d.ln.indpro) * split_size)
 d.ln.indpro.test <- d.ln.indpro[train_test_split:length(d.ln.indpro)]
-
-#predictions
-##arma(3,0)
-d.ln.indpro.arma3$preds <- forecast_ARMA(split_size, d.ln.indpro, n_ar=3, n_ma=0)
-(d.ln.indpro.arma3$mse <- mean((d.ln.indpro.arma3$preds - d.ln.indpro.test)^2))
-layout(1:2); ts.plot(d.ln.indpro.arma3$preds); ts.plot(d.ln.indpro.test)
 
 #---------#
 # T10YFFM #
@@ -293,6 +312,10 @@ bic_ardl <- matrix(NA, nrow=4, ncol=4)
 colnames(bic_ardl) <- c("T10YFFM(1)", "T10YFFM(2)", "T10YFFM(3)", "T10YFFM(4)")
 rownames(bic_ardl) <- c("INDPRO(1)", "INDPRO(2)", "INDPRO(3)", "INDPRO(4)")
 
+mse_ardl <- matrix(NA, nrow=4, ncol=4)
+colnames(mse_ardl) <- c("T10YFFM(1)", "T10YFFM(2)", "T10YFFM(3)", "T10YFFM(4)")
+rownames(mse_ardl) <- c("INDPRO(1)", "INDPRO(2)", "INDPRO(3)", "INDPRO(4)")
+
 for (i in seq(1,4)) {
   for (j in seq(1,4)) {
     print(paste('Estimating AR(', i,',', j,')'))
@@ -302,6 +325,8 @@ for (i in seq(1,4)) {
     ardl <- dynlm(d.ln.indpro ~ L(d.ln.indpro, (1:i)) + L(t10yffm, (1:j)))
     aic_ardl[i,j] <- AIC(ardl)
     bic_ardl[i,j] <- BIC(ardl)
+    predictions <- forecast_ARDL(split_size, d.ln.indpro, t10yffm, n_ylag = i, n_xlag = j)
+    mse_ardl[i,j] <- mean((predictions - d.ln.indpro.test)^2)
   }
 }
 
@@ -309,6 +334,7 @@ aic_ardl
 #AIC suggests ARDL(1,4) for INDPRO ~ T10YFFM
 bic_ardl
 #BIC suggests ARDL(1,4) for INDPRO ~ T10YFFM, too
+mse_ardl
 
 #ranking aic
 aic_ardl.ranked <- data.frame(rows=rownames(aic_ardl), cols=colnames(aic_ardl), stack(as.data.frame(aic_ardl)))[, c("rows", "ind", "values")]
@@ -319,6 +345,12 @@ aic_ardl.ranked <- na.omit(aic_ardl.ranked[order(aic_ardl.ranked$AIC),][complete
 bic_ardl.ranked <- data.frame(rows=rownames(bic_ardl), cols=colnames(bic_ardl), stack(as.data.frame(bic_ardl)))[, c("rows", "ind", "values")]
 colnames(bic_ardl.ranked) <-  c("INDPRO Lags", "T10YFFM Lags", "BIC")
 bic_ardl.ranked <- na.omit(bic_ardl.ranked[order(bic_ardl.ranked$BIC),][complete.cases(bic_ardl.ranked),])
+
+#ranking mse
+mse_ardl.ranked <- data.frame(rows=rownames(mse_ardl), cols=colnames(mse_ardl), stack(as.data.frame(mse_ardl)))[, c("rows", "ind", "values")]
+colnames(mse_ardl.ranked) <-  c("INDPRO Lags", "T10YFFM Lags", "MSE")
+mse_ardl.ranked <- na.omit(mse_ardl.ranked[order(mse_ardl.ranked$MSE),][complete.cases(mse_ardl.ranked),])
+
 
 #latex tables
 print(
@@ -332,6 +364,12 @@ print(
   file="bic_ardl.txt", 
   include.rownames = FALSE, include.colnames = TRUE, 
   hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{BIC} \\\\\n",""))
+)
+print(
+  xtable(mse_ardl.ranked[1:9,], caption = 'MSE values for different ARDL models', digits = 1), 
+  file="mse_ardl.txt", 
+  include.rownames = FALSE, include.colnames = TRUE, 
+  hline.after = c(0), add.to.row = list(pos = list(-1,0), command = c("\\multicolumn{2}{c}{MSE} \\\\\n",""))
 )
 
 ##ARDL(1,4) and ARDL(3,1) to be checked
